@@ -1,66 +1,68 @@
-import fs from "fs/promises";
-import path from "path";
-import { fileURLToPath } from "url";
+const fs = require("fs");
+const path = require("path");
+const shortId = require("shortid");
+const { promises: fsPromise } = fs;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const contactsPath = path.join(__dirname, "db", "contacts.json"); // OS independent
 
-const contactsPath = path.join(__dirname, "./db/contacts.json");
-
-function listContacts() {
-	fs.readFile(contactsPath).then((data) => console.table(JSON.parse(data)));
+async function listContacts() {
+	try {
+		return await fsPromise.readFile(contactsPath).then((data) => {
+			console.table(JSON.parse(data));
+			return JSON.parse(data);
+		});
+	} catch (err) {
+		errHandle(err);
+	}
 }
 
-function getContactById(contactId) {
-	fs.readFile(contactsPath)
-		.then((data) => {
-			const contacts = JSON.parse(data);
-			const contact = contacts.find((contact) => contact.id === +contactId);
-			console.table(contact);
-		})
-		.catch((err) => console.log(err.message));
+async function getContactById(contactId) {
+	try {
+		const contacts = await listContacts();
+		const contact = contacts.find(
+			({ id }) => id.toString() === contactId.toString()
+		);
+		console.table(contact);
+	} catch (err) {
+		errHandle(err);
+	}
 }
 
-function removeContact(contactId) {
-	let filterdContact = [];
-	fs.readFile(contactsPath)
-		.then((data) => {
-			const contacts = JSON.parse(data);
-			filterdContact = contacts.filter((contact) => contact.id !== +contactId);
+async function removeContact(contactId) {
+	try {
+		const contacts = await listContacts(); // взять все контакты
 
-			const filterdContactJSON = JSON.stringify(filterdContact);
+		const newList = contacts.filter(
+			({ id }) => id.toString() !== contactId.toString()
+		);
 
-			fs.writeFile(contactsPath, filterdContactJSON, (err) => {
-				if (err) console.error("writeFileError: ", err);
-			});
-		})
-		.catch((err) => console.log(err.message));
+		await fsPromise.writeFile(contactsPath, JSON.stringify(newList));
+	} catch (err) {
+		errHandle(err); // Функа для обработки ошибок
+	}
 }
 
-function addContact(name, email, phone) {
-	let contacts = [];
-	fs.readFile(contactsPath)
-		.then((data) => {
-			contacts = JSON.parse(data.toString());
-			let id = contacts.length + 1;
-
-			const newContacts = {
-				id,
-				name,
-				email,
-				phone,
-			};
-			contacts.push(newContacts);
-			const newContactsJSON = JSON.stringify(contacts);
-
-			fs.writeFile(contactsPath, newContactsJSON, (err) => {
-				if (err) console.error(err);
-			});
-		})
-		.catch((error) => console.log(error));
+async function addContact(name, email, phone) {
+	try {
+		let contacts = await listContacts();
+		const newContacts = {
+			id: shortId.generate(),
+			name,
+			email,
+			phone,
+		};
+		contacts.push(newContacts);
+		await fsPromise.writeFile(contactsPath, JSON.stringify(contacts));
+	} catch (err) {
+		errHandle(err);
+	}
 }
 
-export default {
+function errHandle(error) {
+	console.log(error.message);
+}
+
+module.exports = {
 	listContacts,
 	getContactById,
 	removeContact,

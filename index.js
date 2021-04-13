@@ -1,12 +1,11 @@
-// const {
-// 	listContacts,
-// 	getContactById,
-// 	removeContact,
-// 	addContact,
-// } = require("./contacts.js");
-import contacts from "./contacts.js";
+const {
+	listContacts,
+	getContactById,
+	removeContact,
+	addContact,
+} = require("./contacts.js");
 
-import { Command } from "commander/esm.mjs";
+const { Command } = require("commander");
 const program = new Command();
 program
 	.option("-a, --action <type>", "choose action")
@@ -23,24 +22,24 @@ const argv = program.opts();
 function invokeAction({ action, id, name, email, phone }) {
 	switch (action) {
 		case "list":
-			contacts.listContacts();
+			//node index.js --action="list"
+			listContacts();
 			break;
 
 		case "get":
-			console.log(5556);
-
-			contacts.getContactById(id);
+			//node index.js --action="get" --id='gxrgyCiA6'
+			getContactById(id);
 			break;
 
 		case "add":
-			//  -a add -n sergii -e sergi@mai.com -p 0960792310
+			//  node index.js -a add -n sergii -e sergi@mai.com -p 0960792310
 			// ... name email phone
-			contacts.addContact(name, email, phone);
+			addContact(name, email, phone);
 			break;
 
 		case "remove":
 			// ... id
-			contacts.removeContact(id);
+			removeContact(id);
 			break;
 
 		default:
